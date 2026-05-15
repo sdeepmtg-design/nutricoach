@@ -40,15 +40,13 @@ async def init_database() -> None:
 
 async def on_startup(bot: Bot) -> None:
     await init_database()
-    if settings.webhook_url:
-        url = f"{settings.webhook_url.rstrip('/')}{WEBHOOK_PATH}"
-        await bot.set_webhook(url, secret_token=settings.webhook_secret)
-        logger.info("Webhook: %s", url)
+    url = f"{settings.webhook_url}{WEBHOOK_PATH}"
+    await bot.set_webhook(url, secret_token=settings.webhook_secret)
+    logger.info("NutriCoach webhook: %s", url)
 
 
 async def on_shutdown(bot: Bot) -> None:
-    if settings.webhook_url:
-        await bot.delete_webhook(drop_pending_updates=False)
+    await bot.delete_webhook(drop_pending_updates=False)
     await bot.session.close()
 
 
@@ -81,11 +79,11 @@ def run_webhook() -> None:
 
     setup_application(app, dp, bot=bot, on_startup=on_startup, on_shutdown=on_shutdown)
 
-    logger.info("NutriCoach webhook on 0.0.0.0:%s", settings.port)
+    logger.info("NutriCoach web server on 0.0.0.0:%s", settings.port)
     web.run_app(app, host="0.0.0.0", port=settings.port)
 
 
-async def main() -> None:
+def main() -> None:
     if not settings.bot_token:
         print("Укажи BOT_TOKEN в переменных окружения")
         sys.exit(1)
@@ -94,12 +92,15 @@ async def main() -> None:
 
     if settings.bot_mode == "webhook":
         if not settings.webhook_url:
-            print("Для webhook укажи WEBHOOK_URL (https://твой-сервис.onrender.com)")
+            print(
+                "Для webhook укажи WEBHOOK_URL или задеплой на Render "
+                "(используется RENDER_EXTERNAL_URL)"
+            )
             sys.exit(1)
         run_webhook()
     else:
-        await run_polling()
+        asyncio.run(run_polling())
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

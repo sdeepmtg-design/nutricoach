@@ -27,27 +27,19 @@ copy .env.example .env
 python main.py
 ```
 
-## Деплой на Render
+## Деплой на Render (Web Service)
 
-### Вариант A — Worker (рекомендуется, polling)
-
-Стабильно работает 24/7. Нужен план **Starter** (~$7/мес).
+Бот работает через **webhook** — Render сам подставляет `RENDER_EXTERNAL_URL`, вручную `WEBHOOK_URL` указывать не нужно.
 
 1. Залей репозиторий на GitHub (без `.env` — он в `.gitignore`).
 2. [dashboard.render.com](https://dashboard.render.com) → **New** → **Blueprint** → репозиторий.
-3. Render подхватит `render.yaml`.
+3. Render подхватит `render.yaml` (тип **Web Service**, план free).
 4. В Environment задай `BOT_TOKEN`, `OPENAI_API_KEY`, при желании `ADMIN_IDS`.
-5. **Deploy** — в логах: `NutriCoach polling started`.
+5. **Deploy** — в логах: `NutriCoach webhook: https://.../webhook`.
 
-### Вариант B — Web + webhook (бесплатно)
+Проверка: открой `https://твой-сервис.onrender.com/health` — должно быть `ok`.
 
-1. Переименуй `render.web.yaml` → `render.yaml` (или создай Web Service вручную).
-2. Start command: `python main.py`, Build: `pip install -r requirements.txt`.
-3. После первого деплоя скопируй URL сервиса (например `https://nutricoach-bot.onrender.com`).
-4. Добавь переменную `WEBHOOK_URL=https://nutricoach-bot.onrender.com` и передеплой.
-5. `BOT_MODE=webhook` уже в конфиге.
-
-> **Важно:** на бесплатном тарифе диск эфемерный — SQLite сбросится при перезапуске. Для продакшена подключи Render Disk или внешнюю БД.
+> **Важно:** на бесплатном тарифе сервис засыпает без трафика (~15 мин), SQLite сбрасывается при перезапуске. Для 24/7 — план Starter или cron-пинг `/health`.
 
 ## Переменные (.env)
 

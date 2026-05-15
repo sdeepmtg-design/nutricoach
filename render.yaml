@@ -1,17 +1,17 @@
 # Blueprint: https://dashboard.render.com/blueprints
-# Worker (polling) — стабильно для Telegram-бота, без health-check конфликтов.
-# План Starter (~$7/мес): https://render.com/pricing
+# Web Service + Telegram webhook (health check на /health)
 services:
-  - type: worker
+  - type: web
     name: nutricoach-bot
     runtime: python
-    plan: starter
+    plan: free
     region: frankfurt
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
+    healthCheckPath: /health
     envVars:
       - key: BOT_MODE
-        value: polling
+        value: webhook
       - key: DATABASE_PATH
         value: data/nutricoach.db
       - key: BOT_TOKEN
@@ -20,6 +20,8 @@ services:
         sync: false
       - key: ADMIN_IDS
         sync: false
+      - key: WEBHOOK_SECRET
+        generateValue: true
       - key: PRO_MONTH_STARS
         value: "150"
       - key: PRO_YEAR_STARS

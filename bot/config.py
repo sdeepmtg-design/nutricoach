@@ -34,17 +34,24 @@ def _parse_admin_ids(raw: str) -> set[int]:
     return {int(x.strip()) for x in raw.split(",") if x.strip()}
 
 
+def _webhook_url() -> str | None:
+    raw = os.getenv("WEBHOOK_URL") or os.getenv("RENDER_EXTERNAL_URL")
+    return raw.rstrip("/") if raw else None
+
+
 def _bot_mode() -> str:
     mode = os.getenv("BOT_MODE", "").strip().lower()
     if mode in ("polling", "webhook"):
         return mode
-    return "webhook" if os.getenv("WEBHOOK_URL") else "polling"
+    if os.getenv("RENDER") or _webhook_url():
+        return "webhook"
+    return "polling"
 
 
 settings = Settings(
     bot_token=os.getenv("BOT_TOKEN", ""),
     bot_mode=_bot_mode(),
-    webhook_url=os.getenv("WEBHOOK_URL") or None,
+    webhook_url=_webhook_url(),
     webhook_secret=os.getenv("WEBHOOK_SECRET") or None,
     port=int(os.getenv("PORT", "10000")),
     openai_api_key=os.getenv("OPENAI_API_KEY") or None,
